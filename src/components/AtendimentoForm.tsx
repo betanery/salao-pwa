@@ -4,6 +4,7 @@ import type { Agendamento, TipoAtendimento } from '../types'
 import { Button } from './ui/Button'
 import { FieldGroup, Select, Input } from './ui/Field'
 import { formatMoney } from '../lib/format'
+import { calcularComissao, formatComissao } from '../lib/comissao'
 
 interface Props {
   agendamento?: Agendamento
@@ -37,6 +38,8 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onDone }: Props
   )
 
   const servico = servicos.find((s) => s.id === servicoId)
+  const profissional = profissionais.find((p) => p.id === profissionalId)
+  const comissao = servico && profissional ? calcularComissao(profissional, servico) : null
 
   const salvarAlteracoesAgendamento = () => {
     if (!agendamento) return
@@ -174,6 +177,13 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onDone }: Props
       {servico && (
         <p className="text-sm text-cinza-ameixa/70">
           Valor do serviço: <span className="font-semibold text-cinza-ameixa">{formatMoney(servico.preco)}</span>
+        </p>
+      )}
+
+      {comissao && (
+        <p className="text-sm text-cinza-ameixa/70">
+          Repasse ({formatComissao(comissao.tipo, comissao.valorConfigurado)}):{' '}
+          <span className="font-semibold text-cinza-ameixa">{formatMoney(comissao.valorRepasse)}</span>
         </p>
       )}
 

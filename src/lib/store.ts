@@ -24,6 +24,7 @@ import {
   seedUsuarios,
 } from './seed'
 import { todayISO, uid } from './format'
+import { calcularComissao } from './comissao'
 
 interface SalaoState {
   usuarios: Usuario[]
@@ -185,6 +186,8 @@ export const useStore = create<SalaoState>()(
           }))
         }
 
+        const comissao = calcularComissao(profissional, servico)
+
         const atendimento: Atendimento = {
           id: uid(),
           data: data ?? todayISO(),
@@ -194,8 +197,9 @@ export const useStore = create<SalaoState>()(
           tipo,
           pacoteClienteId,
           valor: servico.preco,
-          comissaoPercentual: profissional.comissaoPadrao,
-          valorRepasse: Math.round(servico.preco * (profissional.comissaoPadrao / 100) * 100) / 100,
+          comissaoTipo: comissao.tipo,
+          comissaoValor: comissao.valorConfigurado,
+          valorRepasse: comissao.valorRepasse,
           statusRepasse: 'a_pagar',
           agendamentoId,
         }

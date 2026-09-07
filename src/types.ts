@@ -9,12 +9,21 @@ export interface Usuario {
   profissionalId?: string
 }
 
+export type TipoComissao = 'percentual' | 'fixo'
+
+export interface ComissaoServico {
+  servicoId: string
+  tipo: TipoComissao
+  valor: number // percentual (0-100) se tipo "percentual", ou valor em R$ se "fixo"
+}
+
 export interface Profissional {
   id: string
   nome: string
   telefone: string
   email: string
-  comissaoPadrao: number // percentual, ex: 40
+  comissaoPadrao: number // percentual padrão, ex: 40 — usado quando não há exceção por serviço
+  comissoesServicos?: ComissaoServico[] // exceções de comissão por serviço
   ativo: boolean
 }
 
@@ -91,7 +100,8 @@ export interface Atendimento {
   tipo: TipoAtendimento
   pacoteClienteId?: string
   valor: number
-  comissaoPercentual: number
+  comissaoTipo: TipoComissao
+  comissaoValor: number // percentual (0-100) ou valor fixo em R$, conforme comissaoTipo
   valorRepasse: number
   statusRepasse: StatusRepasse
   fechamentoId?: string
