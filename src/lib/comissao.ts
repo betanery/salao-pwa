@@ -14,12 +14,20 @@ export const round2 = (n: number) => Math.round(n * 100) / 100
  * (rateado) quando o atendimento vem de um pacote com desconto. Uma
  * exceção de comissão "fixo" ignora essa base: é sempre o mesmo valor
  * por atendimento, pacote ou avulso.
+ *
+ * No regime "cadeira" (aluguel), a profissional fica com 100% do valor de
+ * cada atendimento — ela paga o aluguel da cadeira à parte, não uma
+ * comissão por serviço. Exceções e comissão padrão não se aplicam aqui.
  */
 export function calcularComissao(
   profissional: Profissional,
   servico: Servico,
   precoReferencia: number = servico.preco
 ): ComissaoCalculada {
+  if (profissional.regimePagamento === 'cadeira') {
+    return { tipo: 'percentual', valorConfigurado: 100, valorRepasse: round2(precoReferencia) }
+  }
+
   const excecao = profissional.comissoesServicos?.find((c) => c.servicoId === servico.id)
 
   if (excecao) {

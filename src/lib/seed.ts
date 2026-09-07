@@ -14,8 +14,28 @@ export const seedUsuarios: Usuario[] = [
 ]
 
 export const seedProfissionais: Profissional[] = [
-  { id: 'p1', nome: 'Camila Souza', telefone: '(61) 99111-2222', email: 'camila@salao.com', comissaoPadrao: 40, ativo: true },
-  { id: 'p2', nome: 'Juliana Alves', telefone: '(61) 99222-3333', email: 'juliana@salao.com', comissaoPadrao: 45, ativo: true },
+  {
+    id: 'p1',
+    nome: 'Camila Souza',
+    telefone: '(61) 99111-2222',
+    email: 'camila@salao.com',
+    regimePagamento: 'comissao',
+    comissaoPadrao: 40,
+    aluguelValor: 0,
+    aluguelPeriodicidade: 'quinzenal',
+    ativo: true,
+  },
+  {
+    id: 'p2',
+    nome: 'Juliana Alves',
+    telefone: '(61) 99222-3333',
+    email: 'juliana@salao.com',
+    regimePagamento: 'cadeira',
+    comissaoPadrao: 0,
+    aluguelValor: 250,
+    aluguelPeriodicidade: 'quinzenal',
+    ativo: true,
+  },
 ]
 
 export const seedServicos: Servico[] = [

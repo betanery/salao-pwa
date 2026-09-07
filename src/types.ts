@@ -17,13 +17,20 @@ export interface ComissaoServico {
   valor: number // percentual (0-100) se tipo "percentual", ou valor em R$ se "fixo"
 }
 
+export type RegimePagamento = 'comissao' | 'cadeira'
+
+export type PeriodicidadeAluguel = 'quinzenal' | 'mensal'
+
 export interface Profissional {
   id: string
   nome: string
   telefone: string
   email: string
-  comissaoPadrao: number // percentual padrão, ex: 40 — usado quando não há exceção por serviço
-  comissoesServicos?: ComissaoServico[] // exceções de comissão por serviço
+  regimePagamento: RegimePagamento // 'comissao' (padrão) ou 'cadeira' (aluguel — profissional fica com 100%)
+  comissaoPadrao: number // percentual padrão, ex: 40 — usado quando não há exceção por serviço (regime "comissao")
+  comissoesServicos?: ComissaoServico[] // exceções de comissão por serviço (regime "comissao")
+  aluguelValor: number // valor cobrado por período (regime "cadeira"), ex: 250
+  aluguelPeriodicidade: PeriodicidadeAluguel // regime "cadeira"
   ativo: boolean
 }
 
@@ -110,6 +117,15 @@ export interface Atendimento {
 
 export interface Pagamento {
   id: string
+  data: string
+  valor: number
+  forma: string
+  observacao?: string
+}
+
+export interface PagamentoAluguel {
+  id: string
+  profissionalId: string
   data: string
   valor: number
   forma: string

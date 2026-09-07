@@ -8,6 +8,7 @@ import type {
   PacoteCliente,
   PacoteModelo,
   Pagamento,
+  PagamentoAluguel,
   Profissional,
   Servico,
   StatusAgendamento,
@@ -38,6 +39,7 @@ interface SalaoState {
   agendamentos: Agendamento[]
   atendimentos: Atendimento[]
   fechamentos: Fechamento[]
+  pagamentosAluguel: PagamentoAluguel[]
 
   login: (email: string, senha: string) => Usuario | null
   logout: () => void
@@ -77,6 +79,11 @@ interface SalaoState {
     periodoFim: string,
     pagamento: Omit<Pagamento, 'id'>
   ) => Fechamento
+
+  registrarPagamentoAluguel: (
+    profissionalId: string,
+    pagamento: Omit<PagamentoAluguel, 'id' | 'profissionalId'>
+  ) => PagamentoAluguel
 }
 
 export const useStore = create<SalaoState>()(
@@ -92,6 +99,7 @@ export const useStore = create<SalaoState>()(
       agendamentos: seedAgendamentos,
       atendimentos: [],
       fechamentos: [],
+      pagamentosAluguel: [],
 
       login: (email, senha) => {
         const user = get().usuarios.find(
@@ -240,6 +248,12 @@ export const useStore = create<SalaoState>()(
           ),
         }))
         return fechamento
+      },
+
+      registrarPagamentoAluguel: (profissionalId, pagamento) => {
+        const registro: PagamentoAluguel = { ...pagamento, id: uid(), profissionalId }
+        set((s) => ({ pagamentosAluguel: [...s.pagamentosAluguel, registro] }))
+        return registro
       },
     }),
     { name: 'salao-pwa-storage' }

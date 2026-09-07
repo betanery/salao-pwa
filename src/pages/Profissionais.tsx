@@ -2,15 +2,24 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { useStore } from '../lib/store'
-import type { ComissaoServico, Profissional, TipoComissao } from '../types'
+import type { ComissaoServico, PeriodicidadeAluguel, Profissional, RegimePagamento, TipoComissao } from '../types'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { FieldGroup, Input, Select } from '../components/ui/Field'
 import { formatComissao } from '../lib/comissao'
+import { formatMoney } from '../lib/format'
 
-const vazio = { nome: '', telefone: '', email: '', comissao: '40' }
+const vazio = {
+  nome: '',
+  telefone: '',
+  email: '',
+  regimePagamento: 'comissao' as RegimePagamento,
+  comissao: '40',
+  aluguelValor: '250',
+  aluguelPeriodicidade: 'quinzenal' as PeriodicidadeAluguel,
+}
 
 export function Profissionais() {
   const navigate = useNavigate()
@@ -31,7 +40,10 @@ export function Profissionais() {
         nome: editando.nome,
         telefone: editando.telefone,
         email: editando.email,
+        regimePagamento: editando.regimePagamento,
         comissao: String(editando.comissaoPadrao),
+        aluguelValor: String(editando.aluguelValor || 250),
+        aluguelPeriodicidade: editando.aluguelPeriodicidade,
       })
       setExcecoes(editando.comissoesServicos ?? [])
     } else {
@@ -61,8 +73,11 @@ export function Profissionais() {
       nome: form.nome,
       telefone: form.telefone,
       email: form.email,
+      regimePagamento: form.regimePagamento,
       comissaoPadrao: Number(form.comissao),
       comissoesServicos: excecoesValidas,
+      aluguelValor: Number(form.aluguelValor),
+      aluguelPeriodicidade: form.aluguelPeriodicidade,
       ativo: editando?.ativo ?? true,
     }
     if (editando) updateProfissional(editando.id, payload)
@@ -88,10 +103,17 @@ export function Profissionais() {
               onClick={() => navigate(`/profissionais/${p.id}`)}
             >
               <p className="text-sm font-semibold">{p.nome}</p>
-              <p className="text-xs text-cinza-ameixa/60">
-                {p.telefone} · Comissão padrão {p.comissaoPadrao}%
-              </p>
-              {p.comissoesServicos && p.comissoesServicos.length > 0 && (
+              {p.regimePagamento === 'cadeira' ? (
+                <p className="text-xs text-cinza-ameixa/60">
+                  {p.telefone} · Cadeira alugada · {formatMoney(p.aluguelValor)}{' '}
+                  {p.aluguelPeriodicidade === 'quinzenal' ? '/ 15 dias' : '/ mês'}
+                </p>
+              ) : (
+                <p className="text-xs text-cinza-ameixa/60">
+                  {p.telefone} · Comissão padrão {p.comissaoPadrao}%
+                </p>
+              )}
+              {p.regimePagamento === 'comissao' && p.comissoesServicos && p.comissoesServicos.length > 0 && (
                 <p className="text-xs text-lilas-profundo mt-0.5">
                   {p.comissoesServicos
                     .map((ex) => {
@@ -140,75 +162,137 @@ export function Profissionais() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </FieldGroup>
-          <FieldGroup label="Comissão padrão (%)">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              required
-              value={form.comissao}
-              onChange={(e) => setForm({ ...form, comissao: e.target.value })}
-            />
+
+          <FieldGroup label="Regime de pagamento">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, regimePagamento: 'comissao' })}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold border ${
+                  form.regimePagamento === 'comissao'
+                    ? 'bg-rosa-quartzo border-rosa-quartzo text-cinza-ameixa'
+                    : 'border-lilas-suave text-cinza-ameixa/70'
+                }`}
+              >
+                Comissão
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, regimePagamento: 'cadeira' })}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold border ${
+                  form.regimePagamento === 'cadeira'
+                    ? 'bg-rosa-quartzo border-rosa-quartzo text-cinza-ameixa'
+                    : 'border-lilas-suave text-cinza-ameixa/70'
+                }`}
+              >
+                Cadeira Alugada
+              </button>
+            </div>
           </FieldGroup>
 
-          <div>
-            <p className="text-xs font-semibold text-rosa-antigo mb-1">
-              Exceções de comissão por serviço (opcional)
-            </p>
-            <p className="text-xs text-cinza-ameixa/50 mb-2">
-              Use para serviços em que a comissão foge do padrão — em % ou em valor fixo por atendimento.
-            </p>
-            <div className="space-y-2">
-              {excecoes.map((ex, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Select
-                    value={ex.servicoId}
-                    onChange={(e) => atualizarExcecao(index, 'servicoId', e.target.value)}
-                    className="flex-1"
-                  >
-                    <option value="">Serviço</option>
-                    {servicos.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nome}
-                      </option>
-                    ))}
-                  </Select>
-                  <Select
-                    value={ex.tipo}
-                    onChange={(e) => atualizarExcecao(index, 'tipo', e.target.value as TipoComissao)}
-                    className="w-28"
-                  >
-                    <option value="percentual">%</option>
-                    <option value="fixo">R$ fixo</option>
-                  </Select>
+          {form.regimePagamento === 'comissao' ? (
+            <>
+              <FieldGroup label="Comissão padrão (%)">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  required
+                  value={form.comissao}
+                  onChange={(e) => setForm({ ...form, comissao: e.target.value })}
+                />
+              </FieldGroup>
+
+              <div>
+                <p className="text-xs font-semibold text-rosa-antigo mb-1">
+                  Exceções de comissão por serviço (opcional)
+                </p>
+                <p className="text-xs text-cinza-ameixa/50 mb-2">
+                  Use para serviços em que a comissão foge do padrão — em % ou em valor fixo por atendimento.
+                </p>
+                <div className="space-y-2">
+                  {excecoes.map((ex, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Select
+                        value={ex.servicoId}
+                        onChange={(e) => atualizarExcecao(index, 'servicoId', e.target.value)}
+                        className="flex-1"
+                      >
+                        <option value="">Serviço</option>
+                        {servicos.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.nome}
+                          </option>
+                        ))}
+                      </Select>
+                      <Select
+                        value={ex.tipo}
+                        onChange={(e) => atualizarExcecao(index, 'tipo', e.target.value as TipoComissao)}
+                        className="w-28"
+                      >
+                        <option value="percentual">%</option>
+                        <option value="fixo">R$ fixo</option>
+                      </Select>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={ex.valor}
+                        onChange={(e) => atualizarExcecao(index, 'valor', Number(e.target.value))}
+                        className="w-24"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setExcecoes((prev) => prev.filter((_, i) => i !== index))}
+                        className="p-2 text-cinza-ameixa/40 hover:text-coral-suave"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExcecoes((prev) => [...prev, { servicoId: '', tipo: 'percentual', valor: 0 }])
+                  }
+                  className="mt-2 text-sm font-semibold text-lilas-profundo"
+                >
+                  + Adicionar exceção
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-cinza-ameixa/60 -mt-1">
+                Nesse regime a profissional fica com 100% do valor de cada atendimento. Em troca, ela paga
+                o aluguel da cadeira abaixo.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <FieldGroup label="Valor do aluguel (R$)">
                   <Input
                     type="number"
                     min={0}
                     step="0.01"
-                    value={ex.valor}
-                    onChange={(e) => atualizarExcecao(index, 'valor', Number(e.target.value))}
-                    className="w-24"
+                    required
+                    value={form.aluguelValor}
+                    onChange={(e) => setForm({ ...form, aluguelValor: e.target.value })}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setExcecoes((prev) => prev.filter((_, i) => i !== index))}
-                    className="p-2 text-cinza-ameixa/40 hover:text-coral-suave"
+                </FieldGroup>
+                <FieldGroup label="Cobrado a cada">
+                  <Select
+                    value={form.aluguelPeriodicidade}
+                    onChange={(e) =>
+                      setForm({ ...form, aluguelPeriodicidade: e.target.value as PeriodicidadeAluguel })
+                    }
                   >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setExcecoes((prev) => [...prev, { servicoId: '', tipo: 'percentual', valor: 0 }])
-              }
-              className="mt-2 text-sm font-semibold text-lilas-profundo"
-            >
-              + Adicionar exceção
-            </button>
-          </div>
+                    <option value="quinzenal">15 dias</option>
+                    <option value="mensal">Mês</option>
+                  </Select>
+                </FieldGroup>
+              </div>
+            </>
+          )}
 
           <Button type="submit" fullWidth>
             Salvar Profissional
