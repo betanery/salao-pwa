@@ -25,6 +25,7 @@ import {
 } from './seed'
 import { todayISO, uid } from './format'
 import { calcularComissao } from './comissao'
+import { valorUnitarioPacote } from './pacote'
 
 interface SalaoState {
   usuarios: Usuario[]
@@ -173,7 +174,13 @@ export const useStore = create<SalaoState>()(
         const profissional = get().profissionais.find((p) => p.id === profissionalId)
         if (!servico || !profissional) throw new Error('Serviço ou profissional inválido')
 
+        let precoReferencia = servico.preco
+
         if (tipo === 'pacote' && pacoteClienteId) {
+          const pacoteCliente = get().pacotesCliente.find((pc) => pc.id === pacoteClienteId)
+          if (pacoteCliente) {
+            precoReferencia = valorUnitarioPacote(pacoteCliente, servicoId, get().servicos)
+          }
           set((s) => ({
             pacotesCliente: s.pacotesCliente.map((pc) => {
               if (pc.id !== pacoteClienteId) return pc
@@ -186,7 +193,7 @@ export const useStore = create<SalaoState>()(
           }))
         }
 
-        const comissao = calcularComissao(profissional, servico)
+        const comissao = calcularComissao(profissional, servico, precoReferencia)
 
         const atendimento: Atendimento = {
           id: uid(),
@@ -196,7 +203,7 @@ export const useStore = create<SalaoState>()(
           servicoId,
           tipo,
           pacoteClienteId,
-          valor: servico.preco,
+          valor: precoReferencia,
           comissaoTipo: comissao.tipo,
           comissaoValor: comissao.valorConfigurado,
           valorRepasse: comissao.valorRepasse,

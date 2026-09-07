@@ -5,6 +5,7 @@ import { Button } from './ui/Button'
 import { FieldGroup, Select, Input } from './ui/Field'
 import { formatMoney } from '../lib/format'
 import { calcularComissao, formatComissao } from '../lib/comissao'
+import { valorUnitarioPacote } from '../lib/pacote'
 
 interface Props {
   agendamento?: Agendamento
@@ -39,7 +40,17 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onDone }: Props
 
   const servico = servicos.find((s) => s.id === servicoId)
   const profissional = profissionais.find((p) => p.id === profissionalId)
-  const comissao = servico && profissional ? calcularComissao(profissional, servico) : null
+  const pacoteSelecionado = pacotesDisponiveis.find((pc) => pc.id === pacoteClienteId)
+
+  const precoReferencia =
+    tipo === 'pacote' && pacoteSelecionado && servico
+      ? valorUnitarioPacote(pacoteSelecionado, servico.id, servicos)
+      : servico?.preco
+
+  const comissao =
+    servico && profissional && precoReferencia !== undefined
+      ? calcularComissao(profissional, servico, precoReferencia)
+      : null
 
   const salvarAlteracoesAgendamento = () => {
     if (!agendamento) return
@@ -176,7 +187,15 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onDone }: Props
 
       {servico && (
         <p className="text-sm text-cinza-ameixa/70">
-          Valor do serviço: <span className="font-semibold text-cinza-ameixa">{formatMoney(servico.preco)}</span>
+          Valor de tabela do serviço:{' '}
+          <span className="font-semibold text-cinza-ameixa">{formatMoney(servico.preco)}</span>
+        </p>
+      )}
+
+      {tipo === 'pacote' && pacoteSelecionado && precoReferencia !== undefined && (
+        <p className="text-sm text-cinza-ameixa/70">
+          Valor unitário neste pacote:{' '}
+          <span className="font-semibold text-cinza-ameixa">{formatMoney(precoReferencia)}</span>
         </p>
       )}
 

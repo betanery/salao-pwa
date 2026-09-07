@@ -8,7 +8,18 @@ export interface ComissaoCalculada {
 
 export const round2 = (n: number) => Math.round(n * 100) / 100
 
-export function calcularComissao(profissional: Profissional, servico: Servico): ComissaoCalculada {
+/**
+ * `precoReferencia` é a base sobre a qual a comissão percentual incide —
+ * o preço de tabela do serviço por padrão, ou o preço unitário real
+ * (rateado) quando o atendimento vem de um pacote com desconto. Uma
+ * exceção de comissão "fixo" ignora essa base: é sempre o mesmo valor
+ * por atendimento, pacote ou avulso.
+ */
+export function calcularComissao(
+  profissional: Profissional,
+  servico: Servico,
+  precoReferencia: number = servico.preco
+): ComissaoCalculada {
   const excecao = profissional.comissoesServicos?.find((c) => c.servicoId === servico.id)
 
   if (excecao) {
@@ -18,14 +29,14 @@ export function calcularComissao(profissional: Profissional, servico: Servico): 
     return {
       tipo: 'percentual',
       valorConfigurado: excecao.valor,
-      valorRepasse: round2((servico.preco * excecao.valor) / 100),
+      valorRepasse: round2((precoReferencia * excecao.valor) / 100),
     }
   }
 
   return {
     tipo: 'percentual',
     valorConfigurado: profissional.comissaoPadrao,
-    valorRepasse: round2((servico.preco * profissional.comissaoPadrao) / 100),
+    valorRepasse: round2((precoReferencia * profissional.comissaoPadrao) / 100),
   }
 }
 
