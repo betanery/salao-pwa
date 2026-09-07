@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import type { Agendamento, TipoAtendimento } from '../types'
 import { Button } from './ui/Button'
-import { FieldGroup, Select } from './ui/Field'
+import { FieldGroup, Select, Input } from './ui/Field'
 import { formatMoney } from '../lib/format'
 
 interface Props {
@@ -17,10 +17,12 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
   const servicos = useStore((s) => s.servicos).filter((sv) => sv.ativo)
   const pacotesCliente = useStore((s) => s.pacotesCliente)
   const confirmarAtendimento = useStore((s) => s.confirmarAtendimento)
+  const updateAgendamento = useStore((s) => s.updateAgendamento)
 
   const [clienteId, setClienteId] = useState(agendamento?.clienteId ?? clienteIdInicial ?? '')
   const [servicoId, setServicoId] = useState(agendamento?.servicoId ?? '')
   const [profissionalId, setProfissionalId] = useState(agendamento?.profissionalId ?? '')
+  const [horario, setHorario] = useState(agendamento?.horario ?? '')
   const [tipo, setTipo] = useState<TipoAtendimento>('avulso')
   const [pacoteClienteId, setPacoteClienteId] = useState('')
   const [concluido, setConcluido] = useState(false)
@@ -39,6 +41,17 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!clienteId || !servicoId || !profissionalId) return
+
+    if (agendamento) {
+      updateAgendamento(agendamento.id, {
+        clienteId,
+        servicoId,
+        profissionalId,
+        horario: horario || agendamento.horario,
+        duracaoMin: servico?.duracaoMin ?? agendamento.duracaoMin,
+      })
+    }
+
     confirmarAtendimento({
       clienteId,
       servicoId,
@@ -62,12 +75,7 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <FieldGroup label="Cliente">
-        <Select
-          required
-          value={clienteId}
-          disabled={!!agendamento}
-          onChange={(e) => setClienteId(e.target.value)}
-        >
+        <Select required value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
           <option value="">Selecione a cliente</option>
           {clientes.map((c) => (
             <option key={c.id} value={c.id}>
@@ -78,12 +86,7 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
       </FieldGroup>
 
       <FieldGroup label="Serviço">
-        <Select
-          required
-          value={servicoId}
-          disabled={!!agendamento}
-          onChange={(e) => setServicoId(e.target.value)}
-        >
+        <Select required value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
           <option value="">Selecione o serviço</option>
           {servicos.map((s) => (
             <option key={s.id} value={s.id}>
@@ -94,12 +97,7 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
       </FieldGroup>
 
       <FieldGroup label="Profissional">
-        <Select
-          required
-          value={profissionalId}
-          disabled={!!agendamento}
-          onChange={(e) => setProfissionalId(e.target.value)}
-        >
+        <Select required value={profissionalId} onChange={(e) => setProfissionalId(e.target.value)}>
           <option value="">Selecione a profissional</option>
           {profissionais.map((p) => (
             <option key={p.id} value={p.id}>
@@ -108,6 +106,12 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
           ))}
         </Select>
       </FieldGroup>
+
+      {agendamento && (
+        <FieldGroup label="Horário">
+          <Input type="time" required value={horario} onChange={(e) => setHorario(e.target.value)} />
+        </FieldGroup>
+      )}
 
       <FieldGroup label="Tipo de atendimento">
         <div className="flex gap-2">
