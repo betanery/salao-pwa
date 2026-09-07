@@ -30,7 +30,7 @@ export function AgendamentoDetalheModal({
             <Badge tone="pending">Agendamento cancelado</Badge>
           ) : (
             <>
-              <AtendimentoForm agendamento={agendamento} onConcluido={onClose} />
+              <AtendimentoForm agendamento={agendamento} onDone={onClose} />
               <Button
                 variant="ghost"
                 fullWidth

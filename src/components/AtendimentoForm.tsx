@@ -8,10 +8,10 @@ import { formatMoney } from '../lib/format'
 interface Props {
   agendamento?: Agendamento
   clienteIdInicial?: string
-  onConcluido?: () => void
+  onDone?: () => void
 }
 
-export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: Props) {
+export function AtendimentoForm({ agendamento, clienteIdInicial, onDone }: Props) {
   const clientes = useStore((s) => s.clientes)
   const profissionais = useStore((s) => s.profissionais).filter((p) => p.ativo)
   const servicos = useStore((s) => s.servicos).filter((sv) => sv.ativo)
@@ -38,19 +38,28 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
 
   const servico = servicos.find((s) => s.id === servicoId)
 
+  const salvarAlteracoesAgendamento = () => {
+    if (!agendamento) return
+    updateAgendamento(agendamento.id, {
+      clienteId,
+      servicoId,
+      profissionalId,
+      horario: horario || agendamento.horario,
+      duracaoMin: servico?.duracaoMin ?? agendamento.duracaoMin,
+    })
+  }
+
+  const handleSalvarAlteracoes = () => {
+    if (!clienteId || !servicoId || !profissionalId || !horario) return
+    salvarAlteracoesAgendamento()
+    onDone?.()
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!clienteId || !servicoId || !profissionalId) return
 
-    if (agendamento) {
-      updateAgendamento(agendamento.id, {
-        clienteId,
-        servicoId,
-        profissionalId,
-        horario: horario || agendamento.horario,
-        duracaoMin: servico?.duracaoMin ?? agendamento.duracaoMin,
-      })
-    }
+    salvarAlteracoesAgendamento()
 
     confirmarAtendimento({
       clienteId,
@@ -61,7 +70,7 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
       agendamentoId: agendamento?.id,
     })
     setConcluido(true)
-    onConcluido?.()
+    onDone?.()
   }
 
   if (concluido) {
@@ -166,6 +175,12 @@ export function AtendimentoForm({ agendamento, clienteIdInicial, onConcluido }: 
         <p className="text-sm text-cinza-ameixa/70">
           Valor do serviço: <span className="font-semibold text-cinza-ameixa">{formatMoney(servico.preco)}</span>
         </p>
+      )}
+
+      {agendamento && (
+        <Button type="button" variant="secondary" fullWidth onClick={handleSalvarAlteracoes}>
+          Salvar Alterações
+        </Button>
       )}
 
       <Button type="submit" fullWidth>
