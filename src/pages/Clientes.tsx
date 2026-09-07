@@ -20,8 +20,9 @@ export function Clientes() {
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
     if (!termo) return clientes
+    const digitos = termo.replace(/\D/g, '')
     return clientes.filter(
-      (c) => c.nome.toLowerCase().includes(termo) || c.telefone.replace(/\D/g, '').includes(termo.replace(/\D/g, ''))
+      (c) => c.nome.toLowerCase().includes(termo) || (digitos && c.telefone.replace(/\D/g, '').includes(digitos))
     )
   }, [clientes, busca])
 
