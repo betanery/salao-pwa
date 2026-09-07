@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Quicksand", ui-rounded, "Nunito Sans", sans-serif;
+  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-rosa-quartzo: #f4b6c2;
+  --color-rosa-antigo: #c97b8c;
+  --color-lilas-suave: #d8c7e8;
+  --color-lilas-profundo: #9b7fb5;
+  --color-pessego-claro: #fbe3d8;
+  --color-amarelo-manteiga: #fcefc7;
+  --color-offwhite: #fff8f6;
+  --color-cinza-ameixa: #4a3b45;
+  --color-verde-salvia: #b8d8ba;
+  --color-coral-suave: #f2a9a0;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: var(--color-offwhite);
+    color: var(--color-cinza-ameixa);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: none;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+  }
+}
